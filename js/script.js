@@ -8,7 +8,7 @@ class Snake {
 
   move() {
     const head = { x: this.body[0].x, y: this.body[0].y };
-
+    this.oldDirection = this.direction;
     switch (this.direction) {
       case 'up':
         if (this.oldDirection !== 'down') {
@@ -49,8 +49,15 @@ class Snake {
     this.body.unshift(head);
   }
 
+  checkAgainstApple(apple) {
+    if (this.body[0].x === apple.x && this.body[0].y === apple.y) {
+      this.body.unshift({ x: apple.x, y: apple.y });
+      return true;
+    }
+    return false;
+  }
+
   changeDirection(newDirection) {
-    this.oldDirection = this.direction;
     this.direction = newDirection;
   }
 
@@ -82,23 +89,78 @@ class Snake {
   }
 }
 
+class Apple {
+  constructor() {
+    this.x = $random(0, 19);
+    this.y = $random(0, 19);
+    this.apple = undefined
+  }
 
+  draw() {
+    if (this.apple) {
+      this.apple.remove();
+    }
+    const rect = $e('main')[0].getBoundingClientRect();
+    const left = rect.left + 30;
+    const top = rect.top + 30;
+    this.apple = $mk('div', 'snake-tile');
+    this.apple.style.top = top + this.y * 25 + 'px';
+    this.apple.style.left = left + this.x * 25 + 'px';
+    $e('main')[0].appendChild(this.apple);
+  }
+}
+
+const counter = {
+  target: undefined,
+  value: 0,
+  increment: function () {
+    this.value++;
+    this.target.innerText = this.value;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  counter.target = $e('h1')[0];
+})
 
 function setGame() {
-  $c('overlay')[0].style.display = 'none';
-  let snake = new Snake();
-  snake.move();
-  snake.move();
-  let interval = setInterval(() => {
-    if (snake.ok())
-      snake.move();
-    if (!snake.ok()) {
+  let apple = new Apple();
+  apple.draw();
+  counter.value = 0;
+  function intervalHandler() {
+
+    snake.move();
+    if (snake.ok()) {
+      console.log(JSON.stringify(snake.body[0]) + ' ' + JSON.stringify(apple))
+      if (snake.checkAgainstApple(apple)) {
+        counter.increment();
+        apple = new Apple();
+        apple.draw();
+      }
+    }
+    else {
       clearInterval(interval);
       $c('overlay')[0].style.display = 'block';
       return
     }
     snake.draw();
-  }, 200);
+    apple.draw();
+  }
+
+  let interval
+  function mkInterval(time) {
+    if (interval)
+      clearInterval(interval);
+    intervalHandler()
+    interval = setInterval(intervalHandler, time);
+  }
+
+  $c('overlay')[0].style.display = 'none';
+  let snake = new Snake();
+  snake.move();
+  snake.move();
+  mkInterval(400);
+
   window.addEventListener('keydown', (event) => {
     switch (event.key) {
       case 'ArrowUp':
