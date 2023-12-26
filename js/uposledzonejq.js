@@ -18,6 +18,11 @@ function $e(e)
     return document.getElementsByTagName(e);
 }
 
+function $s(s)
+{
+    return document.querySelector(s);
+}
+
 function $mk(elem, className="")
 {
     let x = document.createElement(elem);
