@@ -1,7 +1,7 @@
 // Snake class
 class Snake {
   constructor() {
-    this.body = [{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 3, y: 1 }];
+    this.body = [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }];
     this.direction = 'right';
     this.oldDirection = '';
   }
@@ -64,15 +64,15 @@ class Snake {
   }
 
   ok() {
-    console.log(this.body[0].x, this.body[0].y, this.checkCollisionWithItself())
     return this.body[0].x <= 19 && this.body[0].x >= 0 && this.body[0].y <= 19 && this.body[0].y >= 0 && !this.checkCollisionWithItself();
   }
 
   draw() {
     // Get the position of the element relative to the viewport
     const rect = $e('main')[0].getBoundingClientRect();
-    const left = rect.left;
-    const top = rect.top;
+    const left = rect.left + 30;
+    const top = rect.top + 30;
+    $e('main')[0].innerHTML = '';
     this.body.forEach((segment) => {
       const snakeElement = $mk('div', 'snake-tile');
       snakeElement.style.top = top + segment.y * 25 + 'px';
@@ -97,11 +97,8 @@ function setGame() {
       $c('overlay')[0].style.display = 'block';
       return
     }
-    $e('main')[0].innerHTML = '';
     snake.draw();
   }, 200);
-
-
   window.addEventListener('keydown', (event) => {
     switch (event.key) {
       case 'ArrowUp':
