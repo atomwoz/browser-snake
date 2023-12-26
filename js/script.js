@@ -1,14 +1,32 @@
 // Snake class
 class Snake {
   constructor() {
-    this.body = [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }];
+    this.body = [{ x: 0, y: 0, direction: "right" }, { x: 1, y: 0, direction: "right" }, { x: 2, y: 0, direction: "right" }];
     this.direction = 'right';
     this.oldDirection = '';
   }
 
+  directionToNumber(direction) {
+    switch (direction) {
+      case 'up':
+        return 0;
+      case 'right':
+        return 90;
+      case 'down':
+        return 180;
+      case 'left':
+        return -90;
+    }
+  }
+
   move() {
-    const head = { x: this.body[0].x, y: this.body[0].y };
-    this.oldDirection = this.direction;
+    const head = { x: this.body[0].x, y: this.body[0].y, direction: this.direction };
+    let bend = false;
+    if (this.body.length > 1) {
+      if (head.direction !== this.body[0].direction) {
+        head.bend = head.direction + "_" + this.body[0].direction;
+      }
+    }
     switch (this.direction) {
       case 'up':
         if (this.oldDirection !== 'down') {
@@ -58,6 +76,7 @@ class Snake {
   }
 
   changeDirection(newDirection) {
+    this.oldDirection = this.direction;
     this.direction = newDirection;
   }
 
@@ -75,15 +94,52 @@ class Snake {
   }
 
   draw() {
-    // Get the position of the element relative to the viewport
     const rect = $e('main')[0].getBoundingClientRect();
     const left = rect.left + 30;
     const top = rect.top + 30;
     $e('main')[0].innerHTML = '';
-    this.body.forEach((segment) => {
+
+    const headImage = $mk('img', 'snake-head');
+    headImage.src = 'img/head.png';
+
+    const bodyImage = $mk('img', 'snake-body');
+    bodyImage.src = 'img/mid.png';
+
+    const tailImage = $mk('img', 'snake-tail');
+    tailImage.src = 'img/tail.png';
+
+    this.body.forEach((segment, index) => {
       const snakeElement = $mk('div', 'snake-tile');
       snakeElement.style.top = top + segment.y * 25 + 'px';
       snakeElement.style.left = left + segment.x * 25 + 'px';
+
+      // Determine which image to use based on the snake segment
+      let currentImage;
+      if (index === 0) {
+        currentImage = headImage;
+      } else if (index === this.body.length - 1) {
+        currentImage = tailImage;
+      } else {
+        currentImage = bodyImage;
+        if (segment.bend) {
+          currentImage.src = `img/${segment.bend}.png`;
+        }
+      }
+      if (!segment.bend) {
+        // Rotate the snake segment based on segment.direction
+        if (segment.direction === 'up') {
+          currentImage.style.transform = 'rotate(0deg)';
+        } else if (segment.direction === 'right') {
+          currentImage.style.transform = 'rotate(90deg)';
+        } else if (segment.direction === 'down') {
+          currentImage.style.transform = 'rotate(180deg)';
+        } else if (segment.direction === 'left') {
+          currentImage.style.transform = 'rotate(-90deg)';
+        }
+      }
+
+
+      snakeElement.appendChild(currentImage.cloneNode(true));
       $e('main')[0].appendChild(snakeElement);
     });
   }
@@ -106,6 +162,11 @@ class Apple {
     this.apple = $mk('div', 'snake-tile');
     this.apple.style.top = top + this.y * 25 + 'px';
     this.apple.style.left = left + this.x * 25 + 'px';
+
+    const appleImage = $mk('img', 'apple-image');
+    appleImage.src = 'img/apple.png';
+    this.apple.appendChild(appleImage);
+
     $e('main')[0].appendChild(this.apple);
   }
 }
@@ -126,12 +187,12 @@ document.addEventListener('DOMContentLoaded', () => {
 function setGame() {
   let apple = new Apple();
   apple.draw();
-  counter.value = 0;
+  counter.value = -1;
+  counter.increment();
   function intervalHandler() {
 
     snake.move();
     if (snake.ok()) {
-      console.log(JSON.stringify(snake.body[0]) + ' ' + JSON.stringify(apple))
       if (snake.checkAgainstApple(apple)) {
         counter.increment();
         apple = new Apple();
