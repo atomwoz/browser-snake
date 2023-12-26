@@ -19,9 +19,20 @@ body
 }
 
 main {
+  display: block;
+  position: static;
   width: 500px;
   height: 500px;
   background-color: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   border: 10px dashed #ccc;
+}
+
+.snake-tile {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background-color: green;
+  transform: translate(-50%, -50%);
+  position: absolute;
 }
