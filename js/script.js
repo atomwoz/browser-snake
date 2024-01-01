@@ -1,9 +1,10 @@
 // Snake class
 class Snake {
   constructor() {
-    this.body = [{ x: 0, y: 0, direction: "right" }, { x: 1, y: 0, direction: "right" }, { x: 2, y: 0, direction: "right" }];
+    this.body = [{ x: 0, y: 0, direction: "right"}, { x: 1, y: 0, direction: "right" }, { x: 2, y: 0, direction: "right" }, { x: 3, y: 0, direction: "right", invisible: true }];
     this.direction = 'right';
     this.oldDirection = '';
+    this.realDirection = this.direction;
   }
 
   directionToNumber(direction) {
@@ -20,16 +21,10 @@ class Snake {
   }
 
   move() {
-    const head = { x: this.body[0].x, y: this.body[0].y, direction: this.direction };
-    let bend = false;
-    if (this.body.length > 1) {
-      if (head.direction !== this.body[0].direction) {
-        head.bend = head.direction + "_" + this.body[0].direction;
-      }
-    }
+    const head = { x: this.body[0].x, y: this.body[0].y, direction: this.direction, invisible: this.body[0].invisible };
     switch (this.direction) {
       case 'up':
-        if (this.oldDirection !== 'down') {
+        if (this.realDirection !== 'down') {
           head.y--;
         } else {
           head.y++;
@@ -37,7 +32,7 @@ class Snake {
         }
         break;
       case 'down':
-        if (this.oldDirection !== 'up') {
+        if (this.realDirection !== 'up') {
           head.y++;
         } else {
           head.y--;
@@ -45,7 +40,7 @@ class Snake {
         }
         break;
       case 'left':
-        if (this.oldDirection !== 'right') {
+        if (this.realDirection !== 'right') {
           head.x--;
         }
         else {
@@ -54,7 +49,7 @@ class Snake {
         }
         break;
       case 'right':
-        if (this.oldDirection !== 'left') {
+        if (this.realDirection !== 'left') {
           head.x++;
         }
         else {
@@ -63,13 +58,28 @@ class Snake {
         }
         break;
     }
-    this.body.pop();
+    if (this.body[this.body.length - 1].invisible) {
+      this.body.pop();
+    }
+    else {
+      this.body[this.body.length - 1].invisible = undefined;
+    }
     this.body.unshift(head);
+    this.body[this.body.length - 1].invisible = true;
+    this.realDirection = this.direction;
+  }
+
+  intervalTime(x)
+  {
+    x+=3
+    console.log(800*(1/x))
+    return 800*(1/x)
   }
 
   checkAgainstApple(apple) {
     if (this.body[0].x === apple.x && this.body[0].y === apple.y) {
-      this.body.unshift({ x: apple.x, y: apple.y });
+      this.body[this.body.length - 1].invisible = undefined;
+      mkInterval(this.intervalTime(counter.value));
       return true;
     }
     return false;
@@ -78,11 +88,12 @@ class Snake {
   changeDirection(newDirection) {
     this.oldDirection = this.direction;
     this.direction = newDirection;
+
   }
 
   checkCollisionWithItself() {
     for (let i = 1; i < this.body.length; i++) {
-      if (this.body[0].x === this.body[i].x && this.body[0].y === this.body[i].y) {
+      if (this.body[0].x === this.body[i].x && this.body[0].y === this.body[i].y && !this.body[i].invisible) {
         return true;
       }
     }
@@ -109,6 +120,8 @@ class Snake {
     tailImage.src = 'img/tail.png';
 
     this.body.forEach((segment, index) => {
+      if (segment.invisible)
+        return;
       const snakeElement = $mk('div', 'snake-tile');
       snakeElement.style.top = top + segment.y * 25 + 'px';
       snakeElement.style.left = left + segment.x * 25 + 'px';
@@ -117,13 +130,10 @@ class Snake {
       let currentImage;
       if (index === 0) {
         currentImage = headImage;
-      } else if (index === this.body.length - 1) {
+      } else if (index === this.body.length - 2) {
         currentImage = tailImage;
       } else {
         currentImage = bodyImage;
-        if (segment.bend) {
-          currentImage.src = `img/${segment.bend}.png`;
-        }
       }
       if (!segment.bend) {
         // Rotate the snake segment based on segment.direction
@@ -141,6 +151,7 @@ class Snake {
 
       snakeElement.appendChild(currentImage.cloneNode(true));
       $e('main')[0].appendChild(snakeElement);
+
     });
   }
 }
@@ -183,13 +194,18 @@ const counter = {
 document.addEventListener('DOMContentLoaded', () => {
   counter.target = $e('h1')[0];
 })
+let interval, intervalHandler
+function mkInterval(time) {
+  if (interval)
+    clearInterval(interval);
+  interval = setInterval(intervalHandler, time);
+}
 
 function setGame() {
   let apple = new Apple();
-  apple.draw();
   counter.value = -1;
   counter.increment();
-  function intervalHandler() {
+  intervalHandler = function () {
 
     snake.move();
     if (snake.ok()) {
@@ -206,14 +222,6 @@ function setGame() {
     }
     snake.draw();
     apple.draw();
-  }
-
-  let interval
-  function mkInterval(time) {
-    if (interval)
-      clearInterval(interval);
-    intervalHandler()
-    interval = setInterval(intervalHandler, time);
   }
 
   $c('overlay')[0].style.display = 'none';
