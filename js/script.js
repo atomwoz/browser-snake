@@ -1,7 +1,7 @@
 // Snake class
 class Snake {
   constructor() {
-    this.body = [{ x: 0, y: 0, direction: "right"}, { x: 1, y: 0, direction: "right" }, { x: 2, y: 0, direction: "right" }, { x: 3, y: 0, direction: "right", invisible: true }];
+    this.body = [{ x: 0, y: 0, direction: "right", realDirection:"right"}, { x: 1, y: 0, direction: "right", realDirection: "right" }, { x: 2, y: 0, direction: "right", realDirection: "right" }, { x: 3, y: 0, direction: "right", realDirection: "right", invisible: true }];
     this.direction = 'right';
     this.oldDirection = '';
     this.realDirection = this.direction;
@@ -58,6 +58,7 @@ class Snake {
         }
         break;
     }
+    head["realDirection"] = this.direction
     if (this.body[this.body.length - 1].invisible) {
       this.body.pop();
     }
@@ -73,7 +74,7 @@ class Snake {
   {
     x+=3
     console.log(800*(1/x))
-    return 800*(1/x)
+    return 800*(2/x)
   }
 
   checkAgainstApple(apple) {
@@ -119,7 +120,13 @@ class Snake {
     const tailImage = $mk('img', 'snake-tail');
     tailImage.src = 'img/tail.png';
 
-    this.body.forEach((segment, index) => {
+    const ltImage = $mk('img', 'snake-bend');
+    ltImage.src = 'img/lt.png';
+
+    const rtImage = $mk('img', 'snake-bend');
+    rtImage.src = 'img/rt.png';
+
+    this.body.forEach((segment, i) => {
       if (segment.invisible)
         return;
       const snakeElement = $mk('div', 'snake-tile');
@@ -128,24 +135,28 @@ class Snake {
 
       // Determine which image to use based on the snake segment
       let currentImage;
-      if (index === 0) {
+      if (i === 0) {
         currentImage = headImage;
-      } else if (index === this.body.length - 2) {
+      } else if (i === this.body.length - 2) {
         currentImage = tailImage;
       } else {
         currentImage = bodyImage;
       }
       if (!segment.bend) {
         // Rotate the snake segment based on segment.direction
-        if (segment.direction === 'up') {
+        if (segment.realDirection === 'up') {
           currentImage.style.transform = 'rotate(0deg)';
-        } else if (segment.direction === 'right') {
+        } else if (segment.realDirection === 'right') {
           currentImage.style.transform = 'rotate(90deg)';
-        } else if (segment.direction === 'down') {
+        } else if (segment.realDirection === 'down') {
           currentImage.style.transform = 'rotate(180deg)';
-        } else if (segment.direction === 'left') {
+        } else if (segment.realDirection === 'left') {
           currentImage.style.transform = 'rotate(-90deg)';
         }
+      }
+      if(this.body[i-1] != undefined && this.body[i+1] != undefined && this.body[i-1].realDirection != this.body[i+1].realDirection)
+      {
+        currentImage = ltImage;
       }
 
 
@@ -157,10 +168,21 @@ class Snake {
 }
 
 class Apple {
-  constructor() {
-    this.x = $random(0, 19);
-    this.y = $random(0, 19);
-    this.apple = undefined
+  constructor(snake) {
+    let flag = false;
+    do
+    {
+      this.x = $random(0, 19);
+      this.y = $random(0, 19);
+      this.apple = undefined
+      flag = false
+      snake.body.forEach(segment => {
+        if(segment.x == this.x && segment.y == this.y)
+          flag = true
+          return
+      })
+    }
+    while(flag)
   }
 
   draw() {
@@ -202,16 +224,17 @@ function mkInterval(time) {
 }
 
 function setGame() {
-  let apple = new Apple();
+  let apple
   counter.value = -1;
   counter.increment();
+  let snake = new Snake();
   intervalHandler = function () {
 
     snake.move();
     if (snake.ok()) {
       if (snake.checkAgainstApple(apple)) {
         counter.increment();
-        apple = new Apple();
+        apple = new Apple(snake);
         apple.draw();
       }
     }
@@ -225,7 +248,8 @@ function setGame() {
   }
 
   $c('overlay')[0].style.display = 'none';
-  let snake = new Snake();
+  
+  apple = new Apple(snake);
   snake.move();
   snake.move();
   mkInterval(400);
