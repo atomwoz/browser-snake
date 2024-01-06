@@ -72,9 +72,7 @@ class Snake {
 
   intervalTime(x)
   {
-    x+=3
-    console.log(800*(1/x))
-    return 800*(2/x)
+    return 800*(2/(x+6))
   }
 
   checkAgainstApple(apple) {
@@ -123,9 +121,6 @@ class Snake {
     const ltImage = $mk('img', 'snake-bend');
     ltImage.src = 'img/lt.png';
 
-    const rtImage = $mk('img', 'snake-bend');
-    rtImage.src = 'img/rt.png';
-
     this.body.forEach((segment, i) => {
       if (segment.invisible)
         return;
@@ -154,9 +149,39 @@ class Snake {
           currentImage.style.transform = 'rotate(-90deg)';
         }
       }
-      if(this.body[i-1] != undefined && this.body[i+1] != undefined && this.body[i-1].realDirection != this.body[i+1].realDirection)
+      if(this.body[i-1] != undefined && this.body[i] != undefined && this.body[i-1].realDirection != this.body[i].realDirection)
       {
         currentImage = ltImage;
+        console.log(this.body[i-1].realDirection+""+this.body[i].realDirection)
+        switch (this.body[i-1].realDirection+""+this.body[i].realDirection) {
+          case "downright":
+            currentImage.style.transform = 'rotate(0deg)';
+            break;
+          case "rightdown":
+            currentImage.style.transform = 'rotate(180deg)';
+            break;
+          case "leftdown":
+            currentImage.style.transform = 'rotate(90deg)';
+            break;
+          case "downleft":
+            currentImage.style.transform = 'rotate(-90deg)';
+            break;
+          case "upright":
+            currentImage.style.transform = 'rotate(90deg)';
+            break;
+          case "upleft":
+            currentImage.style.transform = 'rotate(180deg)';
+            break;
+          case "rightup":
+            currentImage.style.transform = 'rotate(-90deg)';
+            break;
+          case "leftup":
+            currentImage.style.transform = 'rotate(0deg)';
+            break;
+          default:
+           currentImage.style.transform = 'scaleX(0.3) rotate(120deg)';
+            break;
+        }
       }
 
 
