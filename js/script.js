@@ -132,7 +132,7 @@ class Snake {
       let currentImage;
       if (i === 0) {
         currentImage = headImage;
-      } else if (i === this.body.length - 2) {
+      } else if ((i === this.body.length - 2 && this.body[i+1].invisible) || i === this.body.length - 1) {
         currentImage = tailImage;
       } else {
         currentImage = bodyImage;
